@@ -4,6 +4,7 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 
 const TODOS = [{
   _id: new ObjectID(),
@@ -15,10 +16,28 @@ const TODOS = [{
   completedAt: 333
 }];
 
+const USERS = [{
+  _id: new ObjectID(),
+  email: 'who1@ever.com',
+  password: '123abc'
+}, {
+  _id: new ObjectID(),
+  email: 'who2@ever.com',
+  password: '123abc'
+}];
+
 beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(TODOS);
-  }).then(() => done());
+  // Todo.remove({}).then(() => {
+  //   return Todo.insertMany(TODOS);
+  // }).then(() => done());
+
+  User.remove({}).then(() => {
+    return User.insertMany(USERS);
+  }).then(() => {
+    Todo.remove({}).then(() => {
+      return Todo.insertMany(TODOS);
+    }).then(() => done());
+  });
 });
 
 describe('POST /todos', () => {
@@ -176,5 +195,90 @@ describe('PATCH /todos/:id', () => {
         expect(res.body.todo.completedAt).toNotExist();
       })
       .end(done);
+  });
+});
+
+describe('POST /users', () => {
+  it('should create a new user', (done) => {
+    var email = 'who3@ever.com';
+    var password = '123abc';
+
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.email).toBe(email);
+        expect(res.body.password).toBe(password);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.find({email}).then((users) => {
+          expect(users.length).toBe(1);
+          expect(users[0].email).toBe(email);
+          expect(users[0].password).toBe(password);
+          done();
+        }).catch((err) => done(err));
+      });
+  });
+
+  it('should not create user with bad data', (done) => {
+    request(app)
+      .post('/users')
+      .send({})
+      .expect(400)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.find().then((users) => {
+          expect(users.length).toBe(USERS.length);
+          done();
+        }).catch((err) => done(err));
+      });
+  });
+
+  it('should not create user with duplicate email', (done) => {
+    var email = 'who1@ever.com';
+    var password = '123abc';
+
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(400)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.find().then((users) => {
+          expect(users.length).toBe(USERS.length);
+          done();
+        }).catch((err) => done(err));
+      });
+  });
+
+  it('should not create user with invalid email', (done) => {
+    var email = 'who1@ever';
+    var password = '123abc';
+
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(400)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        
+        User.find().then((users) => {
+          expect(users.length).toBe(USERS.length);
+          done();
+        }).catch((err) => done(err));
+      });
   });
 });
