@@ -209,7 +209,6 @@ describe('POST /users', () => {
       .expect(200)
       .expect((res) => {
         expect(res.body.email).toBe(email);
-        expect(res.body.password).toBe(password);
       })
       .end((err, res) => {
         if (err) {
@@ -219,7 +218,6 @@ describe('POST /users', () => {
         User.find({email}).then((users) => {
           expect(users.length).toBe(1);
           expect(users[0].email).toBe(email);
-          expect(users[0].password).toBe(password);
           done();
         }).catch((err) => done(err));
       });
@@ -281,4 +279,27 @@ describe('POST /users', () => {
         }).catch((err) => done(err));
       });
   });
+
+  it('should hash the user\'s password', (done) => {
+    var email = 'who3@ever.com';
+    var password = '123abc';
+
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        
+        User.findOne({email}).then((user) => {
+          expect(user).toExist();
+          expect(user.password).toExist();
+          expect(user.password).toNotBe(password);
+          done();
+        }).catch((err) => done(err));
+      });
+  });
+
 });
