@@ -260,108 +260,42 @@ describe('POST /users', () => {
   });
 });
 
-// describe('POST /users', () => {
-//   it('should create a new user', (done) => {
-//     var email = 'who3@ever.com';
-//     var password = '123abc';
+describe('POST /users/login', () => {
+  it('should send back valid token if email and password valid', (done) => {
+    var email = USERS[0].email;
+    var password = USERS[0].password;
 
-//     request(app)
-//       .post('/users')
-//       .send({email, password})
-//       .expect(200)
-//       .expect((res) => {
-//         expect(res.body.email).toBe(email);
-//       })
-//       .end((err, res) => {
-//         if (err) {
-//           return done(err);
-//         }
+    request(app)
+      .post('/users/login')
+      .send({email, password})
+      .expect(200)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toExist();
+      })
+      .end(done);
+  });
 
-//         User.find({email}).then((users) => {
-//           expect(users.length).toBe(1);
-//           expect(users[0].email).toBe(email);
-//           done();
-//         }).catch((err) => done(err));
-//       });
-//   });
+  it('should return error if email invalid', (done) => {
+    var email = USERS[0].email + 'a';
+    var password = USERS[0].password;
 
-//   it('should not create user with bad data', (done) => {
-//     request(app)
-//       .post('/users')
-//       .send({})
-//       .expect(400)
-//       .end((err, res) => {
-//         if (err) {
-//           return done(err);
-//         }
+    request(app)
+      .post('/users/login')
+      .send({email, password})
+      .expect(400)
+      .end(done);
+  });
 
-//         User.find().then((users) => {
-//           expect(users.length).toBe(USERS.length);
-//           done();
-//         }).catch((err) => done(err));
-//       });
-//   });
+  it('should return error if password invalid', (done) => {
+    var email = USERS[0].email;
+    var password = USERS[0].password + '2';
 
-//   it('should not create user with duplicate email', (done) => {
-//     var email = 'who1@ever.com';
-//     var password = '123abc';
+    request(app)
+      .post('/users/login')
+      .send({email, password})
+      .expect(400)
+      .end(done);
+  });
 
-//     request(app)
-//       .post('/users')
-//       .send({email, password})
-//       .expect(400)
-//       .end((err, res) => {
-//         if (err) {
-//           return done(err);
-//         }
 
-//         User.find().then((users) => {
-//           expect(users.length).toBe(USERS.length);
-//           done();
-//         }).catch((err) => done(err));
-//       });
-//   });
-
-//   it('should not create user with invalid email', (done) => {
-//     var email = 'who1@ever';
-//     var password = '123abc';
-
-//     request(app)
-//       .post('/users')
-//       .send({email, password})
-//       .expect(400)
-//       .end((err, res) => {
-//         if (err) {
-//           return done(err);
-//         }
-        
-//         User.find().then((users) => {
-//           expect(users.length).toBe(USERS.length);
-//           done();
-//         }).catch((err) => done(err));
-//       });
-//   });
-
-//   it('should hash the user\'s password', (done) => {
-//     var email = 'who3@ever.com';
-//     var password = '123abc';
-
-//     request(app)
-//       .post('/users')
-//       .send({email, password})
-//       .expect(200)
-//       .end((err, res) => {
-//         if (err) {
-//           return done(err);
-//         }
-        
-//         User.findOne({email}).then((user) => {
-//           expect(user).toExist();
-//           expect(user.password).toExist();
-//           expect(user.password).toNotBe(password);
-//           done();
-//         }).catch((err) => done(err));
-//       });
-//   });
-
-// });
+});
