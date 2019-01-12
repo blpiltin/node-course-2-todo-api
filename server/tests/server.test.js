@@ -332,6 +332,29 @@ describe('POST /users/login', () => {
         .catch((err) => done(err));
       });
   });
+});
 
+describe('DELETE /users/me/token', () => {
+  it('should delete the user\'s token', (done) => {
+    var email = USERS[0].email;
+    var password = USERS[0].password;
 
+    request(app)
+      .delete('/users/me/token')
+      .set('x-auth', USERS[0].tokens[0].token)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+
+        User.findById(USERS[0]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        })
+        .catch((err) => done(err));
+      });
+  });
+
+  it('should not delete another user\'s token', (done) => {
+    done();
+  });
 });
