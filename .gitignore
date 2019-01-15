@@ -1,2 +1,3 @@
 node_modules
 startdb
+server/config/config.json
